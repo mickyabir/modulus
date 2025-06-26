@@ -50,6 +50,9 @@ command = "builtin:math.eval"
 type = "vector_lookup"
 memory = "vectorstore"
 
+[tool.code_executor]
+type = "function"
+command = "builtin:code.run"  # Interpreted inside your runtime
 
 # ----------------------------
 # [[agent]]
@@ -69,6 +72,14 @@ llm = "fast"
 tools = ["calculator"]
 memory = "vectorstore"
 
+[agent.coder]
+role = "Python programmer"
+goal = "Write working code to solve the given task"
+llm = "default"
+tools = ["code_executor", "search"]
+memory = "vectorstore"
+behavior = "loop"
+loop_control = { max_steps = 10, stop_condition = "output.contains('SUCCESS')" }
 
 # ----------------------------
 # [task.<name>]
@@ -81,6 +92,11 @@ handoff_to = "analyst"
 input_schema = { question = "string" }
 output_schema = { answer = "string", citations = "array" }
 
+[task.code_synthesis]
+description = "Let the agent attempt to write working code"
+entry_agent = "coder"
+input_schema = { problem = "string" }
+output_schema = { solution = "string", logs = "array" }
 
 # ----------------------------
 # [deployment.<name>]
@@ -91,7 +107,6 @@ runtime = "fastapi"
 expose = ["task.qa"]
 port = 8080
 auth_token = "${DEPLOY_AUTH_TOKEN}"
-
 
 # ----------------------------
 # [vars]

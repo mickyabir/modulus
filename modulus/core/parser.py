@@ -4,18 +4,22 @@ from pathlib import Path
 from tomlkit import parse
 from typing import Dict, Any, Callable
 
+from modulus.core.models.agent import AgentConfig
+from modulus.core.models.deployment import DeploymentConfig
 from modulus.core.models.llm import LLMConfig
 from modulus.core.models.memory import MemoryConfig
 from modulus.core.models.tool import ToolConfig
+from modulus.core.models.vars import VarsConfig
 
 class TomlParser():
     def __init__(self):
-        self.RESOURCE_PARSERS: Dict[str, Callable[[str, Dict[str, Any]], Any]] = {
+        self.resource_parsers: Dict[str, Callable[[str, Dict[str, Any]], Any]] = {
             "llm": self.parse_llm_block,
             "memory": self.parse_memory_block,
             "tool": self.parse_tool_block,
-            # "tool": parse_tool_block,
-            # "agent": parse_agent_block,
+            "agent": self.parse_agent_block,
+            "deployment": self.parse_deployment_block,
+            "vars": self.parse_vars_block,
         }
 
     def parse_llm_block(self, name: str, block: Dict[str, Any]) -> LLMConfig:
@@ -57,7 +61,7 @@ class TomlParser():
 
     def parse_tool_block(self, name: str, block: Dict[str, Any]) -> ToolConfig:
         """
-        Parse a single [tool.name] block into an MemoryConfig instance.
+        Parse a single [tool.name] block into an ToolConfig instance.
         """
         tool_type = block.get("type")
         known_keys = {"endpoint", "method", "headers", "command", "memory"}
@@ -69,10 +73,51 @@ class TomlParser():
             params=params
         )
 
+    def parse_agent_block(self, name: str, block: Dict[str, Any]) -> AgentConfig:
+        """
+        Parse a single [agent.name] block into an AgentConfig instance.
+        """
+        role = block.get("role")
+        goal = block.get("goal")
+        llm = block.get("llm")
+        tools = block.get("tools")
+        memory = block.get("memory")
 
-    # Add other parse functions here, e.g.:
-    # def parse_tool_block(...)
-    # def parse_agent_block(...)
+        known_keys = {"endpoint", "method", "headers", "command", "memory"}
+        params = {k: v for k, v in block.items() if k not in known_keys}
+
+        return AgentConfig(
+            name=name,
+            role=role,
+            goal=goal,
+            llm=llm,
+            tools=tools,
+            memory=memory,
+            params=params
+        )
+
+    def parse_deployment_block(self, name: str, block: Dict[str, Any]) -> DeploymentConfig:
+        """
+        Parse a single [tool.name] block into an ToolConfig instance.
+        """
+        runtime = block.get("runtime")
+        expose = block.get("expose")
+        port = block.get("port")
+        auth_token = block.get("auth_token")
+
+        return DeploymentConfig(
+            name=name,
+            runtime=runtime,
+            expose=expose,
+            port=port,
+            auth_token=auth_token
+        )
+
+    def parse_vars_block(self, block: Dict[str, Any]) -> VarsConfig:
+        """
+        Parse the [vars] block (treated as a single-entry config).
+        """
+        return VarsConfig(values=dict(block))
 
     def parse(self, toml_path: str) -> Dict[str, Dict[str, Any]]:
         """
@@ -94,19 +139,21 @@ class TomlParser():
 
         results = {}
 
-        # Iterate top-level keys in the TOML document
         for resource_type, resource_blocks in doc.items():
-            if resource_type not in self.RESOURCE_PARSERS:
-                # Skip unknown resource types or handle them differently
+            if resource_type not in self.resource_parsers:
                 continue
 
-            parser_fn = self.RESOURCE_PARSERS[resource_type]
+            parser_fn = self.resource_parsers[resource_type]
             parsed_resources = {}
 
-            # resource_blocks is a table of tables, e.g. [llm.default], [llm.retriever]
-            for resource_name, block in resource_blocks.items():
-                parsed_resources[resource_name] = parser_fn(resource_name, block)
+            if resource_type == "vars":
+                results[resource_type] = {
+                    "vars": parser_fn(resource_blocks)
+                }
+            else:
+                for resource_name, block in resource_blocks.items():
+                    parsed_resources[resource_name] = parser_fn(resource_name, block)
+                results[resource_type] = parsed_resources
 
-            results[resource_type] = parsed_resources
 
         return results
