@@ -1,0 +1,47 @@
+# === Python ===
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+*.log
+*.sqlite3
+*.db
+*.bak
+*.tmp
+.env
+.env.*
+.cache/
+coverage.*
+*.cover
+*.py,cover
+.hypothesis/
+
+# === Virtual Environments ===
+.venv/
+venv/
+ENV/
+env/
+*.venv/
+
+# === JetBrains (PyCharm, IntelliJ) ===
+.idea/
+*.iml
+*.iws
+.idea_modules/
+.idea/
+
+# === OS Files ===
+.DS_Store
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# === Modulus Specific (Optional) ===
+.aiform.state.json
+generated/
+
