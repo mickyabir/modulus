@@ -5,12 +5,13 @@ from tomlkit import parse
 from typing import Dict, Any, Callable
 
 from modulus.core.models.llm import LLMConfig
-# TODO: Import other models like ToolConfig, AgentConfig when implemented
+from modulus.core.models.memory import MemoryConfig
 
 class TomlParser():
     def __init__(self):
         self.RESOURCE_PARSERS: Dict[str, Callable[[str, Dict[str, Any]], Any]] = {
             "llm": self.parse_llm_block,
+            "memory": self.parse_memory_block,
             # "tool": parse_tool_block,
             # "agent": parse_agent_block,
         }
@@ -34,6 +35,24 @@ class TomlParser():
             max_tokens=max_tokens,
             params=params
         )
+
+    def parse_memory_block(self, name: str, block: Dict[str, Any]) -> MemoryConfig:
+        """
+        Parse a single [memory.<name>] block into an MemoryConfig instance.
+        """
+        memory_type = block.get("type")
+        persist = block.get("persist", False)
+        namespace = block.get("namespace")
+        embedding_model = block.get("embedding_model")
+
+        return MemoryConfig(
+            name=name,
+            type=memory_type,
+            persist=persist,
+            namespace=namespace,
+            embedding_model=embedding_model
+        )
+
 
     # Add other parse functions here, e.g.:
     # def parse_tool_block(...)
