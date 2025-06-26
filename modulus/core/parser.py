@@ -1,5 +1,3 @@
-# modulus/core/parser.py
-
 from pathlib import Path
 from tomlkit import parse
 from typing import Dict, Any, Callable
