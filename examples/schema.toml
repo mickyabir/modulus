@@ -36,20 +36,17 @@ embedding_model = "text-embedding-ada-002"  # optional
 # [[tool]]
 # External API, function, or memory lookup
 # ----------------------------
-[[tool]]
-name = "search"
+[tool.search]
 type = "api"
 endpoint = "https://api.serpapi.com/search"
 method = "GET"
 headers = { Authorization = "Bearer ${SERPAPI_KEY}" }
 
-[[tool]]
-name = "calculator"
+[tool.calculator]
 type = "function"
 command = "builtin:math.eval"
 
-[[tool]]
-name = "doc_lookup"
+[tool.doc_lookup]
 type = "vector_lookup"
 memory = "vectorstore"
 
@@ -58,16 +55,14 @@ memory = "vectorstore"
 # [[agent]]
 # Defines an AI persona
 # ----------------------------
-[[agent]]
-name = "researcher"
+[agent.researcher]
 role = "Information seeker"
 goal = "Find and summarize relevant data"
 llm = "default"
 tools = ["search", "doc_lookup"]
 memory = "vectorstore"
 
-[[agent]]
-name = "analyst"
+[agent.analyst]
 role = "Data interpreter"
 goal = "Analyze results and provide final output"
 llm = "fast"
