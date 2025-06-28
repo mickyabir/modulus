@@ -6,6 +6,7 @@ from modulus.core.models.agent import AgentConfig
 from modulus.core.models.deployment import DeploymentConfig
 from modulus.core.models.llm import LLMConfig
 from modulus.core.models.memory import MemoryConfig
+from modulus.core.models.task import TaskConfig
 from modulus.core.models.tool import ToolConfig
 from modulus.core.models.vars import VarsConfig
 
@@ -14,6 +15,7 @@ class TomlParser():
         self.resource_parsers: Dict[str, Callable[[str, Dict[str, Any]], Any]] = {
             "llm": self.parse_llm_block,
             "memory": self.parse_memory_block,
+            "task": self.parse_task_block,
             "tool": self.parse_tool_block,
             "agent": self.parse_agent_block,
             "deployment": self.parse_deployment_block,
@@ -57,12 +59,32 @@ class TomlParser():
             embedding_model=embedding_model
         )
 
+    def parse_task_block(self, name: str, block: Dict[str, Any]) -> TaskConfig:
+        """
+        Parse a single [task.name] block into an TaskConfig instance.
+        """
+        description = block.get("description")
+        entry_agent = block.get("entry_agent")
+        input_schema = block.get("input_schema")
+        output_schema = block.get("output_schema")
+        known_keys = {"description", "entry_agent", "input_schema", "output_schema"}
+        params = {k: v for k, v in block.items() if k not in known_keys}
+
+        return TaskConfig(
+            name=name,
+            description=description,
+            entry_agent=entry_agent,
+            input_schema=input_schema,
+            output_schema=output_schema,
+            params=params
+        )
+
     def parse_tool_block(self, name: str, block: Dict[str, Any]) -> ToolConfig:
         """
         Parse a single [tool.name] block into an ToolConfig instance.
         """
         tool_type = block.get("type")
-        known_keys = {"endpoint", "method", "headers", "command", "memory"}
+        known_keys = {"type"}
         params = {k: v for k, v in block.items() if k not in known_keys}
 
         return ToolConfig(
@@ -81,7 +103,7 @@ class TomlParser():
         tools = block.get("tools")
         memory = block.get("memory")
 
-        known_keys = {"endpoint", "method", "headers", "command", "memory"}
+        known_keys = {"role", "goal", "llm", "tools", "memory"}
         params = {k: v for k, v in block.items() if k not in known_keys}
 
         return AgentConfig(
