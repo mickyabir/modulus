@@ -1,5 +1,5 @@
 from dataclasses import dataclass, field
-from typing import Optional, Dict
+from typing import Optional, Dict, Any
 
 @dataclass
 class LLMConfig:
@@ -8,4 +8,4 @@ class LLMConfig:
     model: str
     temperature: float = 0.7
     max_tokens: Optional[int] = None
-    params: Dict[str, any] = field(default_factory=dict)
+    params: Dict[str, Any] = field(default_factory=dict)

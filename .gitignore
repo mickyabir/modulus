@@ -33,7 +33,6 @@ env/
 *.iml
 *.iws
 .idea_modules/
-.idea/
 
 # === OS Files ===
 .DS_Store
@@ -45,3 +44,6 @@ Desktop.ini
 .aiform.state.json
 generated/
 
+tmp
+
+poetry.lock

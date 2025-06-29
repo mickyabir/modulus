@@ -1,10 +1,13 @@
 from modulus.core.parser import TomlParser
 
+
 def verify_llm(resource_type, config):
     return True
 
+
 def verify_memory(resource_type, config):
     return True
+
 
 def verify_tool(resource_type, config):
     resources = config.get(resource_type)
@@ -27,6 +30,7 @@ def verify_tool(resource_type, config):
                 return False
 
     return True
+
 
 def verify_agent(resource_type, config):
     resources = config.get(resource_type)
@@ -58,6 +62,7 @@ def verify_agent(resource_type, config):
 
     return True
 
+
 def verify_task(resource_type, config):
     resources = config.get(resource_type)
 
@@ -80,6 +85,7 @@ def verify_task(resource_type, config):
                 print(f"Agent '{resource_name}' references non-existent handoff_to '{handoff_to}'")
                 return False
 
+
 def verify_deployment(resource_type, config):
     resources = config.get(resource_type)
 
@@ -95,6 +101,7 @@ def verify_deployment(resource_type, config):
             if config.get("task").get(task) is None:
                 print(f"Deployment '{resource_name}' references non-existent expose task '{task}'")
                 return False
+
 
 def verify():
     config_file = "modulus.toml"

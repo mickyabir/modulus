@@ -5,25 +5,25 @@ from modulus.cli import commands
 app = typer.Typer()
 
 @app.command()
-def init(directory: str = "."):
+def init(directory: str = ".") -> None:
     commands.init(directory)
 
 @app.command()
-def verify():
+def verify() -> None:
     commands.verify()
 
 @app.command()
-def plan():
+def plan() -> None:
     commands.plan()
 
 @app.command()
-def apply():
+def apply() -> None:
     commands.apply()
 
 @app.command()
-def show():
+def show() -> None:
     commands.show()
 
 @app.command()
-def destroy():
+def destroy() -> None:
     commands.destroy()

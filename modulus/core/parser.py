@@ -1,6 +1,6 @@
 from pathlib import Path
 from tomlkit import parse
-from typing import Dict, Any, Callable
+from typing import Callable, Optional, Type, TypeVar, Any, Dict, List, cast
 
 from modulus.core.models.agent import AgentConfig
 from modulus.core.models.deployment import DeploymentConfig
@@ -10,8 +10,30 @@ from modulus.core.models.task import TaskConfig
 from modulus.core.models.tool import ToolConfig
 from modulus.core.models.vars import VarsConfig
 
+T = TypeVar('T')
+
+
+def _get_required_opt_typed(
+        block_type: str,
+        block_name: str,
+        opt_tag: str,
+        block: Dict[str, Any],
+        expected_type: Type[T]
+) -> T:
+    value = block.get(opt_tag)
+    if value is None:
+        raise ValueError(f"{block_type}.{block_name} is missing a '{opt_tag}'")
+
+    if not isinstance(value, expected_type):
+        raise ValueError(
+            f"{block_type}.{block_name} has invalid type for '{opt_tag}': expected {expected_type.__name__}, got {type(value).__name__}"
+        )
+
+    return cast(T, value)
+
+
 class TomlParser():
-    def __init__(self):
+    def __init__(self) -> None:
         self.resource_parsers: Dict[str, Callable[[str, Dict[str, Any]], Any]] = {
             "llm": self.parse_llm_block,
             "memory": self.parse_memory_block,
@@ -19,15 +41,16 @@ class TomlParser():
             "tool": self.parse_tool_block,
             "agent": self.parse_agent_block,
             "deployment": self.parse_deployment_block,
-            "vars": self.parse_vars_block,
+            "vars": lambda name, block: self.parse_vars_block(block),
         }
 
     def parse_llm_block(self, name: str, block: Dict[str, Any]) -> LLMConfig:
         """
         Parse a single [llm.<name>] block into an LLMConfig instance.
         """
-        provider = block.get("provider")
-        model = block.get("model")
+        provider: str = _get_required_opt_typed("llm", name, "provider", block, str)
+        model: str = _get_required_opt_typed("llm", name, "model", block, str)
+
         temperature = block.get("temperature", 0.7)
         max_tokens = block.get("max_tokens")
         known_keys = {"provider", "model", "temperature", "max_tokens"}
@@ -46,7 +69,7 @@ class TomlParser():
         """
         Parse a single [memory.<name>] block into an MemoryConfig instance.
         """
-        memory_type = block.get("type")
+        memory_type: str = _get_required_opt_typed("memory", name, "type", block, str)
         persist = block.get("persist", False)
         namespace = block.get("namespace")
         embedding_model = block.get("embedding_model")
@@ -63,10 +86,10 @@ class TomlParser():
         """
         Parse a single [task.name] block into an TaskConfig instance.
         """
-        description = block.get("description")
-        entry_agent = block.get("entry_agent")
-        input_schema = block.get("input_schema")
-        output_schema = block.get("output_schema")
+        description = block.get("description", "")
+        entry_agent: str = _get_required_opt_typed("task", name, "entry_agent", block, str)
+        input_schema: Dict[str, str] = _get_required_opt_typed("task", name, "input_schema", block, dict)
+        output_schema: Dict[str, str] = _get_required_opt_typed("task", name, "output_schema", block, dict)
         known_keys = {"description", "entry_agent", "input_schema", "output_schema"}
         params = {k: v for k, v in block.items() if k not in known_keys}
 
@@ -83,7 +106,7 @@ class TomlParser():
         """
         Parse a single [tool.name] block into an ToolConfig instance.
         """
-        tool_type = block.get("type")
+        tool_type: str = _get_required_opt_typed("tool", name, "type", block, str)
         known_keys = {"type"}
         params = {k: v for k, v in block.items() if k not in known_keys}
 
@@ -97,11 +120,11 @@ class TomlParser():
         """
         Parse a single [agent.name] block into an AgentConfig instance.
         """
-        role = block.get("role")
-        goal = block.get("goal")
-        llm = block.get("llm")
-        tools = block.get("tools")
-        memory = block.get("memory")
+        role: str = _get_required_opt_typed("agent", name, "role", block, str)
+        goal: str = _get_required_opt_typed("agent", name, "goal", block, str)
+        llm: str = _get_required_opt_typed("agent", name, "llm", block, str)
+        tools: list[str] = _get_required_opt_typed("agent", name, "tools", block, list)
+        memory: str = _get_required_opt_typed("agent", name, "memory", block, str)
 
         known_keys = {"role", "goal", "llm", "tools", "memory"}
         params = {k: v for k, v in block.items() if k not in known_keys}
@@ -120,10 +143,10 @@ class TomlParser():
         """
         Parse a single [tool.name] block into an ToolConfig instance.
         """
-        runtime = block.get("runtime")
-        expose = block.get("expose")
-        port = block.get("port")
-        auth_token = block.get("auth_token")
+        runtime: str = _get_required_opt_typed("deployment", name, "runtime", block, str)
+        expose: list[str] = _get_required_opt_typed("deployment", name, "expose", block, list)
+        port: int = _get_required_opt_typed("deployment", name, "port", block, int)
+        auth_token: str = _get_required_opt_typed("deployment", name, "auth_token", block, str)
 
         return DeploymentConfig(
             name=name,
@@ -168,12 +191,11 @@ class TomlParser():
 
             if resource_type == "vars":
                 results[resource_type] = {
-                    "vars": parser_fn(resource_blocks)
+                    "vars": parser_fn("", resource_blocks)
                 }
             else:
                 for resource_name, block in resource_blocks.items():
                     parsed_resources[resource_name] = parser_fn(resource_name, block)
                 results[resource_type] = parsed_resources
-
 
         return results

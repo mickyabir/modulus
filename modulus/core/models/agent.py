@@ -1,5 +1,5 @@
 from dataclasses import dataclass, field
-from typing import Dict, List
+from typing import Dict, List, Any
 
 
 @dataclass
@@ -10,4 +10,4 @@ class AgentConfig:
     llm: str
     tools: List[str]
     memory: str
-    params: Dict[str, any] = field(default_factory=dict)
+    params: Dict[str, Any] = field(default_factory=dict)

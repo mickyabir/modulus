@@ -1,5 +1,5 @@
 from dataclasses import dataclass, field
-from typing import Dict
+from typing import Dict, Any
 
 
 @dataclass
@@ -9,4 +9,4 @@ class TaskConfig:
     entry_agent: str
     input_schema: Dict[str, str]
     output_schema: Dict[str, str]
-    params: Dict[str, any] = field(default_factory=dict)
+    params: Dict[str, Any] = field(default_factory=dict)
