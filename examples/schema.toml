@@ -33,7 +33,7 @@ embedding_model = "text-embedding-ada-002"  # optional
 
 
 # ----------------------------
-# [[tool]]
+# [tool.<name>]
 # External API, function, or memory lookup
 # ----------------------------
 [tool.search]
@@ -55,7 +55,7 @@ type = "function"
 command = "builtin:code.run"  # Interpreted inside your runtime
 
 # ----------------------------
-# [[agent]]
+# [agent.<name>]
 # Defines an AI persona
 # ----------------------------
 [agent.researcher]
