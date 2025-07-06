@@ -122,6 +122,7 @@ class TomlParser():
         """
         role: str = _get_required_opt_typed("agent", name, "role", block, str)
         goal: str = _get_required_opt_typed("agent", name, "goal", block, str)
+        prompt: str = _get_required_opt_typed("agent", name, "prompt", block, str)
         llm: str = _get_required_opt_typed("agent", name, "llm", block, str)
         tools: list[str] = _get_required_opt_typed("agent", name, "tools", block, list)
         memory: str = _get_required_opt_typed("agent", name, "memory", block, str)
@@ -133,6 +134,7 @@ class TomlParser():
             name=name,
             role=role,
             goal=goal,
+            prompt=prompt,
             llm=llm,
             tools=tools,
             memory=memory,

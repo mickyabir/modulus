@@ -23,14 +23,15 @@ def show():
 
         print()
 
+
 def summarize_resource(resource) -> str:
     if hasattr(resource, "provider") and hasattr(resource, "model"):
         return f"(provider={resource.provider}, model={resource.model})"
     if hasattr(resource, "type"):
         return f"(type={resource.type})"
-    if hasattr(resource, "llm") and hasattr(resource, "tools"):
+    if hasattr(resource, "llm") and hasattr(resource, "tools") and hasattr(resource, "prompt"):
         tools_list = ", ".join(resource.tools) if resource.tools else ""
-        return f"(llm={resource.llm}, tools=[{tools_list}])"
+        return f"(llm={resource.llm}, prompt={resource.prompt}, tools=[{tools_list}])"
     if hasattr(resource, "description"):
         return f"({resource.description})"
     # Deployment special case

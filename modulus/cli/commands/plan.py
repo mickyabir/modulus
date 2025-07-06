@@ -1,18 +1,12 @@
 import os
-from datetime import datetime
+from colorama import Fore, Style, init as colorama_init
 from modulus.core.parser import TomlParser
+from modulus.core.util import flatten_resources
+
+colorama_init()
 
 STATE_FILE = ".modulus.state.toml"
 CONFIG_FILE = "modulus.toml"
-
-
-def flatten_resources(toml_data):
-    flat = {}
-    for resource_type, resources in toml_data.items():
-        if isinstance(resources, dict):
-            for name, res in resources.items():
-                flat[(resource_type, name)] = res
-    return flat
 
 def plan():
     parser = TomlParser()
@@ -51,13 +45,15 @@ def plan():
                         diffs.append(f"    - {sub_key} (was {old_sub!r})")
                     elif old_sub != new_sub:
                         diffs.append(f"    ~ {sub_key}: {old_sub!r} -> {new_sub!r}")
-            elif key not in old:
-                diffs.append(f"    + {key} = {new_val!r}")
-            elif key not in new:
-                diffs.append(f"    - {key} (was {old_val!r})")
-            elif old_val != new_val:
-                diffs.append(f"    ~ {key}: {old_val!r} -> {new_val!r}")
-        return diffs
+            else:
+                if key not in old:
+                    diffs.append(f"    + {key} = {new_val!r}")
+                elif key not in new:
+                    diffs.append(f"    - {key} (was {old_val!r})")
+                elif old_val != new_val:
+                    diffs.append(f"    ~ {key}: {old_val!r} -> {new_val!r}")
+
+        return list(dict.fromkeys(diffs))
 
     for key, attrs in config_resources.items():
         attrs = vars(attrs)
@@ -76,16 +72,21 @@ def plan():
 
     planned_delete = list(existing_resources.keys())
 
-
     if not planned_add and not planned_change and not planned_delete:
-        print("No changes to be made.")
+        print(f"{Fore.GREEN}No changes to be made.{Style.RESET_ALL}")
     else:
         print("Planned changes:")
         for rt, name, _ in planned_add:
-            print(f"  + create {rt}.{name}")
+            print(f"{Fore.GREEN}  + create {rt}.{name}{Style.RESET_ALL}")
         for rt, name, changes in planned_change:
-            print(f"  ~ update {rt}.{name}")
+            print(f"{Fore.YELLOW}  ~ update {rt}.{name}{Style.RESET_ALL}")
             for line in changes:
-                print(line)
+                prefix = line.strip()[0]
+                color = (
+                    Fore.GREEN if prefix == "+" else
+                    Fore.RED if prefix == "-" else
+                    Fore.YELLOW
+                )
+                print(f"{color}{line}{Style.RESET_ALL}")
         for rt, name in planned_delete:
-            print(f"  - delete {rt}.{name}")
+            print(f"{Fore.RED}  - delete {rt}.{name}{Style.RESET_ALL}")

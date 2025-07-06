@@ -64,6 +64,7 @@ command = "builtin:code.run"  # Interpreted inside your runtime
 [agent.researcher]
 role = "Information seeker"
 goal = "Find and summarize relevant data"
+prompt = "@file:prompts/researcher.prompt"
 llm = "default"
 tools = ["search", "doc_lookup"]
 memory = "vectorstore"
@@ -71,6 +72,7 @@ memory = "vectorstore"
 [agent.analyst]
 role = "Data interpreter"
 goal = "Analyze results and provide final output"
+prompt = "@file:prompts/analyst.prompt"
 llm = "fast"
 tools = ["calculator"]
 memory = "vectorstore"
@@ -78,6 +80,7 @@ memory = "vectorstore"
 [agent.coder]
 role = "Python programmer"
 goal = "Write working code to solve the given task"
+prompt = "You are a coding agent."
 llm = "default"
 tools = ["code_executor", "search"]
 memory = "vectorstore"
@@ -116,8 +119,7 @@ auth_token = "${DEPLOY_AUTH_TOKEN}"
 # Secrets and environment substitutions
 # ----------------------------
 [vars]
-SERPAPI_KEY = "your-real-api-key"
-DEPLOY_AUTH_TOKEN = "your-secret-token"
+OPENAI_API_KEY = "your-real-api-key"
 """
 
 def init(directory: str):

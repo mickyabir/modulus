@@ -7,6 +7,7 @@ class AgentConfig:
     name: str
     role: str
     goal: str
+    prompt: str
     llm: str
     tools: List[str]
     memory: str
