@@ -87,17 +87,11 @@ def verify_task(resources, config):
     for resource_name in resources:
         resource = resources.get(resource_name)
 
-        entry_agent = resource.entry_agent
+        flow = resource.flow
 
-        if config.get("agent").get(entry_agent) is None:
-            print(f"Task '{resource_name}' references non-existent entry_agent '{entry_agent}'")
-            return False
-
-        handoff_to = resource.params.get("handoff_to")
-
-        if handoff_to is not None:
-            if config.get("agent").get(handoff_to) is None:
-                print(f"Agent '{resource_name}' references non-existent handoff_to '{handoff_to}'")
+        for agent in flow:
+            if config.get("agent").get(agent) is None:
+                print(f"Task '{resource_name}' references non-existent agent '{agent}'")
                 return False
 
     return True

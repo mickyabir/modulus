@@ -52,6 +52,7 @@ class TomlParser():
         model: str = _get_required_opt_typed("llm", name, "model", block, str)
 
         temperature = block.get("temperature", 0.7)
+        api_key = block.get("api_key", None)
         max_tokens = block.get("max_tokens")
         known_keys = {"provider", "model", "temperature", "max_tokens"}
         params = {k: v for k, v in block.items() if k not in known_keys}
@@ -60,6 +61,7 @@ class TomlParser():
             name=name,
             provider=provider,
             model=model,
+            api_key=api_key,
             temperature=temperature,
             max_tokens=max_tokens,
             params=params
@@ -87,7 +89,7 @@ class TomlParser():
         Parse a single [task.name] block into an TaskConfig instance.
         """
         description = block.get("description", "")
-        entry_agent: str = _get_required_opt_typed("task", name, "entry_agent", block, str)
+        flow: list[str] = _get_required_opt_typed("task", name, "flow", block, list)
         input_schema: Dict[str, str] = _get_required_opt_typed("task", name, "input_schema", block, dict)
         output_schema: Dict[str, str] = _get_required_opt_typed("task", name, "output_schema", block, dict)
         known_keys = {"description", "entry_agent", "input_schema", "output_schema"}
@@ -96,7 +98,7 @@ class TomlParser():
         return TaskConfig(
             name=name,
             description=description,
-            entry_agent=entry_agent,
+            flow=flow,
             input_schema=input_schema,
             output_schema=output_schema,
             params=params

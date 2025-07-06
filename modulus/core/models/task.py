@@ -6,7 +6,7 @@ from typing import Dict, Any
 class TaskConfig:
     name: str
     description: str
-    entry_agent: str
+    flow: list[str]
     input_schema: Dict[str, str]
     output_schema: Dict[str, str]
     params: Dict[str, Any] = field(default_factory=dict)

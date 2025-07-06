@@ -34,6 +34,7 @@ class OpenAIProvider(Provider):
             input=prompt,
             model=self.model,
             temperature=self.params.get('temperature', NOT_GIVEN),
+            max_output_tokens=self.params.get('max_tokens', NOT_GIVEN),
             top_p=self.params.get('top_p', NOT_GIVEN),
         )
 
