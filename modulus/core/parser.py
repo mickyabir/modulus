@@ -150,14 +150,12 @@ class TomlParser():
         runtime: str = _get_required_opt_typed("deployment", name, "runtime", block, str)
         expose: list[str] = _get_required_opt_typed("deployment", name, "expose", block, list)
         port: int = _get_required_opt_typed("deployment", name, "port", block, int)
-        auth_token: str = _get_required_opt_typed("deployment", name, "auth_token", block, str)
 
         return DeploymentConfig(
             name=name,
             runtime=runtime,
             expose=expose,
             port=port,
-            auth_token=auth_token
         )
 
     def parse_vars_block(self, block: Dict[str, Any]) -> VarsConfig:

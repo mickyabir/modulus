@@ -23,14 +23,17 @@ class OpenAIProvider(Provider):
 
         self.api_key = api_key
         self.model = model
-        self.client = OpenAI(api_key=self.api_key)
+        self._client = None
         self.params = params
 
     def connect(self):
-        pass
+        self._client = OpenAI(api_key=self.api_key)
 
     def query(self, prompt: str) -> str:
-        response = self.client.responses.create(
+        if self._client is None:
+            self.connect()
+
+        response = self._client.responses.create(
             input=prompt,
             model=self.model,
             temperature=self.params.get('temperature', NOT_GIVEN),
@@ -39,3 +42,4 @@ class OpenAIProvider(Provider):
         )
 
         return response.output_text
+

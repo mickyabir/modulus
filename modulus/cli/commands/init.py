@@ -13,14 +13,14 @@ example_config = """
 [llm.default]
 provider = "openai"                # required: "openai", "anthropic", etc.
 model = "gpt-4o"                   # required
-temperature = 0.2                  # optional, default = 0.7
+api_key = "@var:OPENAI_API_KEY_DEFAULT"
+temperature = 0.7                  # optional, default = 0.7
 max_tokens = 2048                 # optional
-top_p = 0.9                        # optional provider-specific param
-frequency_penalty = 0.5           # optional provider-specific param
 
 [llm.fast]
 provider = "openai"
 model = "gpt-3.5-turbo"
+api_key = "@var:OPENAI_API_KEY_FAST"
 temperature = 0.0
 
 
@@ -93,14 +93,13 @@ loop_control = { max_steps = 10, stop_condition = "output.contains('SUCCESS')" }
 # ----------------------------
 [task.qa]
 description = "Full question answering pipeline"
-entry_agent = "researcher"
-handoff_to = "analyst"
+flow = ["researcher", "analyst"]
 input_schema = { question = "string" }
 output_schema = { answer = "string", citations = "array" }
 
 [task.code_synthesis]
 description = "Let the agent attempt to write working code"
-entry_agent = "coder"
+flow = ["coder"]
 input_schema = { problem = "string" }
 output_schema = { solution = "string", logs = "array" }
 
@@ -119,7 +118,8 @@ auth_token = "${DEPLOY_AUTH_TOKEN}"
 # Secrets and environment substitutions
 # ----------------------------
 [vars]
-OPENAI_API_KEY = "your-real-api-key"
+OPENAI_API_KEY_DEFAULT = "key"
+OPENAI_API_KEY_FAST = "key"
 """
 
 def init(directory: str):

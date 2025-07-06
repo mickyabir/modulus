@@ -8,4 +8,3 @@ class DeploymentConfig:
     runtime: str
     expose: List[str]
     port: int
-    auth_token: str

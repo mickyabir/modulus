@@ -4,6 +4,8 @@ from modulus.core.util import flatten_resources
 from modulus.core.resources.provider import Provider, OpenAIProvider
 from modulus.core.resources.agent import Agent
 from modulus.core.resources.task import Task
+from modulus.core.resources.deployment import Deployment
+from modulus.core.resources.runtimes.fastapi_runtime import FastAPIRuntime
 
 STATE_FILE = ".modulus.state.toml"
 CONFIG_FILE = "modulus.toml"
@@ -83,8 +85,26 @@ def apply():
 
         tasks[task_name] = Task(task_name, flow, task_config.input_schema, task_config.output_schema)
 
+    deployments = {}
+    for deployment_name in config_data.get('deployment'):
+        deployment_config = config_data.get('deployment').get(deployment_name)
 
-    print(tasks['qa'].start("Teach me about topological qubits"))
+        expose = [tasks[task_name[len("task."):]] for task_name in deployment_config.expose]
 
-    # agent = agents['researcher']
-    # print(agent.message("Teach me about topological qubits"))
+        if deployment_config.runtime == 'fastapi':
+            runtime = FastAPIRuntime()
+        else:
+            raise f"Unsupported deployment runtime `{deployment_config.runtime}`"
+
+        deployments[deployment_name] = Deployment(deployment_name, expose, deployment_config.port, runtime)
+
+    deployments['default'].start()
+
+    import time
+    try:
+        while True:
+            time.sleep(1)
+    except KeyboardInterrupt:
+        print("Shutting down...")
+
+# print(tasks['qa_simplified'].start("Teach me about topological qubits"))
