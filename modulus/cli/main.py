@@ -20,6 +20,12 @@ def plan() -> None:
 def apply() -> None:
     commands.apply()
 
+
+@app.command()
+def run() -> None:
+    commands.run()
+
+
 @app.command()
 def show() -> None:
     commands.show()

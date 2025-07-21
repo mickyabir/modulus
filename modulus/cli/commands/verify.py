@@ -3,9 +3,10 @@ import os
 from modulus.core.parser import TomlParser
 
 
-def verify_llm(resources, config):
+def verify_provider(resources, config):
     for resource, params in resources.items():
-        if params.provider == 'openai':
+        # TODO: verify api_key exists if specified
+        if params.type == 'openai':
             continue
         else:
             print(f"Provider `{params.provider}` support coming soon")
@@ -14,9 +15,49 @@ def verify_llm(resources, config):
     return True
 
 
-def verify_memory(resources, config):
+def verify_llm(resources, config):
+    for resource_name in resources:
+        resource = resources.get(resource_name)
+
+        provider = resource.params.get("provider")
+
+        if provider is not None:
+            if config.get("provider").get(provider) is None:
+                print(f"LLM '{resource_name}' references non-existent provider '{provider}'")
+                return False
+
     return True
 
+
+def verify_embedding(resources, config):
+    for resource_name in resources:
+        resource = resources.get(resource_name)
+
+        provider = resource.params.get("provider")
+
+        if provider is not None:
+            if config.get("provider").get(provider) is None:
+                print(f"Embedding '{resource_name}' references non-existent provider '{provider}'")
+                return False
+
+    return True
+
+
+def verify_memory(resources, config):
+    if resources is None:
+        return True
+
+    for resource_name in resources:
+        resource = resources.get(resource_name)
+
+        embedding = resource.params.get("embedding")
+
+        if embedding is not None:
+            if config.get("embedding").get(embedding) is None:
+                print(f"Memory '{resource_name}' references non-existent embedding '{embedding}'")
+                return False
+
+    return True
 
 def verify_tool(resources, config):
     if resources is None:
@@ -96,6 +137,7 @@ def verify_task(resources, config):
 
     return True
 
+
 def verify_deployment(resources, config):
     if resources is None:
         return True
@@ -113,6 +155,7 @@ def verify_deployment(resources, config):
 
     return True
 
+
 def verify():
     config_file = "modulus.toml"
     parser = TomlParser()
@@ -123,6 +166,8 @@ def verify():
             verified = verified and verify_llm(resources, config)
         elif resource_type == "memory":
             verified = verified and verify_memory(resources, config)
+        elif resource_type == "embedding":
+            verified = verified and verify_embedding(resources, config)
         elif resource_type == "tool":
             verified = verified and verify_tool(resources, config)
         elif resource_type == "agent":
@@ -131,6 +176,8 @@ def verify():
             verified = verified and verify_task(resources, config)
         elif resource_type == "deployment":
             verified = verified and verify_deployment(resources, config)
+        elif resource_type == "provider":
+            verified = verified and verify_provider(resources, config)
 
     if not verified:
         print("\nModulus config file is not valid")

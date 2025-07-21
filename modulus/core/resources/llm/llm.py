@@ -1,14 +1,12 @@
 from abc import ABC, abstractmethod
-from openai import OpenAI, NOT_GIVEN
 
+from openai import NOT_GIVEN
 
-class Provider(ABC):
-    def __init__(self):
-        pass
+from modulus.core.resources.provider import OpenAIProvider
+from modulus.core.resources.provider import Provider
 
-    @abstractmethod
-    def connect(self):
-        """Establish connection or prepare client."""
+class LLM(ABC):
+    def __init__(self, provider: Provider, model: str, params: dict = {}):
         pass
 
     @abstractmethod
@@ -17,23 +15,16 @@ class Provider(ABC):
         pass
 
 
-class OpenAIProvider(Provider):
-    def __init__(self, model: str, api_key: str, params: dict = {}):
+class OpenAILLM(LLM):
+    def __init__(self, provider: OpenAIProvider, model: str, params: dict = {}):
         super().__init__()
 
-        self.api_key = api_key
         self.model = model
-        self._client = None
+        self.provider = provider
         self.params = params
 
-    def connect(self):
-        self._client = OpenAI(api_key=self.api_key)
-
     def query(self, prompt: str) -> str:
-        if self._client is None:
-            self.connect()
-
-        response = self._client.responses.create(
+        response = self.provider.get_client().responses.create(
             input=prompt,
             model=self.model,
             temperature=self.params.get('temperature', NOT_GIVEN),

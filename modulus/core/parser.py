@@ -1,14 +1,8 @@
 from pathlib import Path
 from tomlkit import parse
-from typing import Callable, Optional, Type, TypeVar, Any, Dict, List, cast
+from typing import Callable, Type, TypeVar, Any, Dict, cast
 
-from modulus.core.models.agent import AgentConfig
-from modulus.core.models.deployment import DeploymentConfig
-from modulus.core.models.llm import LLMConfig
-from modulus.core.models.memory import MemoryConfig
-from modulus.core.models.task import TaskConfig
-from modulus.core.models.tool import ToolConfig
-from modulus.core.models.vars import VarsConfig
+from modulus.core.models import AgentConfig, DeploymentConfig, LLMConfig, MemoryConfig, EmbeddingConfig, TaskConfig, ToolConfig, VarsConfig, ProviderConfig
 
 T = TypeVar('T')
 
@@ -35,14 +29,33 @@ def _get_required_opt_typed(
 class TomlParser():
     def __init__(self) -> None:
         self.resource_parsers: Dict[str, Callable[[str, Dict[str, Any]], Any]] = {
-            "llm": self.parse_llm_block,
-            "memory": self.parse_memory_block,
-            "task": self.parse_task_block,
-            "tool": self.parse_tool_block,
             "agent": self.parse_agent_block,
             "deployment": self.parse_deployment_block,
+            "embedding": self.parse_embedding_block,
+            "llm": self.parse_llm_block,
+            "memory": self.parse_memory_block,
+            "provider": self.parse_provider_block,
+            "task": self.parse_task_block,
+            "tool": self.parse_tool_block,
             "vars": lambda name, block: self.parse_vars_block(block),
         }
+
+    def parse_provider_block(self, name: str, block: Dict[str, Any]) -> ProviderConfig:
+        """
+        Parse a single [provider.<name>] block into an ProviderConfig instance.
+        """
+        provider_type: str = _get_required_opt_typed("provider", name, "type", block, str)
+
+        api_key = block.get("api_key", None)
+        known_keys = {"provider", "model", "temperature", "max_tokens"}
+        params = {k: v for k, v in block.items() if k not in known_keys}
+
+        return ProviderConfig(
+            name=name,
+            type=provider_type,
+            api_key=api_key,
+            params=params
+        )
 
     def parse_llm_block(self, name: str, block: Dict[str, Any]) -> LLMConfig:
         """
@@ -52,7 +65,6 @@ class TomlParser():
         model: str = _get_required_opt_typed("llm", name, "model", block, str)
 
         temperature = block.get("temperature", 0.7)
-        api_key = block.get("api_key", None)
         max_tokens = block.get("max_tokens")
         known_keys = {"provider", "model", "temperature", "max_tokens"}
         params = {k: v for k, v in block.items() if k not in known_keys}
@@ -61,9 +73,24 @@ class TomlParser():
             name=name,
             provider=provider,
             model=model,
-            api_key=api_key,
             temperature=temperature,
             max_tokens=max_tokens,
+            params=params
+        )
+
+    def parse_embedding_block(self, name: str, block: Dict[str, Any]) -> EmbeddingConfig:
+        """
+        Parse a single [embedding.<name>] block into an EmbeddingConfig instance.
+        """
+        provider: str = _get_required_opt_typed("embedding", name, "provider", block, str)
+        model: str = _get_required_opt_typed("embedding", name, "model", block, str)
+        known_keys = {"provider", "model", "temperature", "max_tokens"}
+        params = {k: v for k, v in block.items() if k not in known_keys}
+
+        return EmbeddingConfig(
+            name=name,
+            provider=provider,
+            model=model,
             params=params
         )
 
@@ -74,14 +101,17 @@ class TomlParser():
         memory_type: str = _get_required_opt_typed("memory", name, "type", block, str)
         persist = block.get("persist", False)
         namespace = block.get("namespace")
-        embedding_model = block.get("embedding_model")
+        embedding = block.get("embedding")
+        known_keys = {"provider", "model", "temperature", "max_tokens"}
+        params = {k: v for k, v in block.items() if k not in known_keys}
 
         return MemoryConfig(
             name=name,
             type=memory_type,
             persist=persist,
             namespace=namespace,
-            embedding_model=embedding_model
+            embedding=embedding,
+            params=params
         )
 
     def parse_task_block(self, name: str, block: Dict[str, Any]) -> TaskConfig:
@@ -122,20 +152,16 @@ class TomlParser():
         """
         Parse a single [agent.name] block into an AgentConfig instance.
         """
-        role: str = _get_required_opt_typed("agent", name, "role", block, str)
-        goal: str = _get_required_opt_typed("agent", name, "goal", block, str)
         prompt: str = _get_required_opt_typed("agent", name, "prompt", block, str)
         llm: str = _get_required_opt_typed("agent", name, "llm", block, str)
         tools: list[str] = _get_required_opt_typed("agent", name, "tools", block, list)
-        memory: str = _get_required_opt_typed("agent", name, "memory", block, str)
+        memory: str = block.get("memory")
 
         known_keys = {"role", "goal", "llm", "tools", "memory"}
         params = {k: v for k, v in block.items() if k not in known_keys}
 
         return AgentConfig(
             name=name,
-            role=role,
-            goal=goal,
             prompt=prompt,
             llm=llm,
             tools=tools,

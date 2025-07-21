@@ -5,57 +5,56 @@ example_config = """
 # Modulus TOML Schema v0.1
 # ============================
 
+# ----------------------------
+# [openai.<name>]
+# Defines a model provider
+# ----------------------------
+[provider.openai]
+type = "openai"
+api_key = "@var:OPENAI_API_KEY"
 
 # ----------------------------
 # [llm.<name>]
 # Defines a language model
 # ----------------------------
 [llm.default]
-provider = "openai"                # required: "openai", "anthropic", etc.
-model = "gpt-4o"                   # required
-api_key = "@var:OPENAI_API_KEY_DEFAULT"
-temperature = 0.7                  # optional, default = 0.7
-max_tokens = 2048                 # optional
+provider = "openai"
+model = "gpt-4o"
+temperature = 0.7
+max_tokens = 2048
 
 [llm.fast]
 provider = "openai"
 model = "gpt-3.5-turbo"
-api_key = "@var:OPENAI_API_KEY_FAST"
 temperature = 0.0
 
+
+# ----------------------------
+# [embedding.<name>]
+# Defines an embedding model
+# ----------------------------
+[embedding.ada]
+provider = "openai"
+model = "text-embedding-ada-002"
 
 # ----------------------------
 # [memory.<name>]
 # Defines vector memory store
 # ----------------------------
 [memory.vectorstore]
-type = "chroma"                    # required: chroma, weaviate, redis, etc.
-persist = true                     # optional
-namespace = "main"                 # optional
-embedding_model = "text-embedding-ada-002"  # optional
+type = "chroma"
+persist = true
+namespace = "main"
+embedding_model = "text-embedding-ada-002"
 
 
 # ----------------------------
 # [[tool]]
 # External API, function, or memory lookup
 # ----------------------------
-[tool.search]
-type = "api"
-endpoint = "https://api.serpapi.com/search"
-method = "GET"
-headers = { Authorization = "Bearer ${SERPAPI_KEY}" }
-
-[tool.calculator]
+[tool.foo]
 type = "function"
-command = "builtin:math.eval"
-
-[tool.doc_lookup]
-type = "vector_lookup"
-memory = "vectorstore"
-
-[tool.code_executor]
-type = "function"
-command = "builtin:code.run"  # Interpreted inside your runtime
+function = "functions/foo.foofn"
 
 # ----------------------------
 # [[agent]]
@@ -66,7 +65,7 @@ role = "Information seeker"
 goal = "Find and summarize relevant data"
 prompt = "@file:prompts/researcher.prompt"
 llm = "default"
-tools = ["search", "doc_lookup"]
+tools = []
 memory = "vectorstore"
 
 [agent.analyst]
@@ -74,15 +73,31 @@ role = "Data interpreter"
 goal = "Analyze results and provide final output"
 prompt = "@file:prompts/analyst.prompt"
 llm = "fast"
-tools = ["calculator"]
+tools = []
 memory = "vectorstore"
+
+[agent.teacher]
+role = "Information seeker"
+goal = "Find and summarize relevant data"
+prompt = "@file:prompts/teacher.prompt"
+llm = "default"
+tools = []
+memory = "vectorstore"
+
+[agent.simplifier]
+role = "Simplifier"
+goal = "Simplify results"
+prompt = "@file:prompts/simplifier.prompt"
+tools = ["foo"]
+memory = "vectorstore"
+llm = "fast"
 
 [agent.coder]
 role = "Python programmer"
 goal = "Write working code to solve the given task"
 prompt = "You are a coding agent."
 llm = "default"
-tools = ["code_executor", "search"]
+tools = []
 memory = "vectorstore"
 behavior = "loop"
 loop_control = { max_steps = 10, stop_condition = "output.contains('SUCCESS')" }
@@ -97,6 +112,18 @@ flow = ["researcher", "analyst"]
 input_schema = { question = "string" }
 output_schema = { answer = "string", citations = "array" }
 
+[task.qa_simplified]
+description = "Full question answering pipeline"
+flow = ["researcher", "analyst", "simplifier"]
+input_schema = { question = "string" }
+output_schema = { answer = "string"}
+
+[task.teaching]
+description = "Full question answering pipeline"
+flow = ["teacher"]
+input_schema = { question = "string" }
+output_schema = { lesson = "string", examples = "array", exercises = "array" }
+
 [task.code_synthesis]
 description = "Let the agent attempt to write working code"
 flow = ["coder"]
@@ -109,18 +136,17 @@ output_schema = { solution = "string", logs = "array" }
 # ----------------------------
 [deployment.default]
 runtime = "fastapi"
-expose = ["task.qa"]
+expose = ["task.teaching"]
 port = 8080
-auth_token = "${DEPLOY_AUTH_TOKEN}"
 
 # ----------------------------
 # [vars]
 # Secrets and environment substitutions
 # ----------------------------
 [vars]
-OPENAI_API_KEY_DEFAULT = "key"
-OPENAI_API_KEY_FAST = "key"
+OPENAI_API_KEY = "API_KEY"
 """
+
 
 def init(directory: str):
     if not os.path.exists(directory):
