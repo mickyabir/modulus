@@ -8,7 +8,7 @@
 # ----------------------------
 [provider.openai]
 type = "openai"
-api_key = "@var:OPENAI_API_KEY"
+api_key = "@var:OPENAI_API_KEY" # use @env:OPENAI_API_KEY if it is defined as an environment variable
 
 # ----------------------------
 # [llm.<name>]
@@ -24,7 +24,6 @@ max_tokens = 2048
 provider = "openai"
 model = "gpt-3.5-turbo"
 temperature = 0.0
-
 
 # ----------------------------
 # [embedding.<name>]
@@ -44,7 +43,6 @@ persist = true
 namespace = "main"
 embedding_model = "text-embedding-ada-002"
 
-
 # ----------------------------
 # [[tool]]
 # External API, function, or memory lookup
@@ -58,46 +56,16 @@ function = "functions/foo.foofn"
 # Defines an AI persona
 # ----------------------------
 [agent.researcher]
-role = "Information seeker"
-goal = "Find and summarize relevant data"
 prompt = "@file:prompts/researcher.prompt"
 llm = "default"
 tools = []
 memory = "vectorstore"
 
 [agent.analyst]
-role = "Data interpreter"
-goal = "Analyze results and provide final output"
 prompt = "@file:prompts/analyst.prompt"
 llm = "fast"
 tools = []
 memory = "vectorstore"
-
-[agent.teacher]
-role = "Information seeker"
-goal = "Find and summarize relevant data"
-prompt = "@file:prompts/teacher.prompt"
-llm = "default"
-tools = []
-memory = "vectorstore"
-
-[agent.simplifier]
-role = "Simplifier"
-goal = "Simplify results"
-prompt = "@file:prompts/simplifier.prompt"
-tools = ["foo"]
-memory = "vectorstore"
-llm = "fast"
-
-[agent.coder]
-role = "Python programmer"
-goal = "Write working code to solve the given task"
-prompt = "You are a coding agent."
-llm = "default"
-tools = []
-memory = "vectorstore"
-behavior = "loop"
-loop_control = { max_steps = 10, stop_condition = "output.contains('SUCCESS')" }
 
 # ----------------------------
 # [task.<name>]
@@ -109,31 +77,13 @@ flow = ["researcher", "analyst"]
 input_schema = { question = "string" }
 output_schema = { answer = "string", citations = "array" }
 
-[task.qa_simplified]
-description = "Full question answering pipeline"
-flow = ["researcher", "analyst", "simplifier"]
-input_schema = { question = "string" }
-output_schema = { answer = "string"}
-
-[task.teaching]
-description = "Full question answering pipeline"
-flow = ["teacher"]
-input_schema = { question = "string" }
-output_schema = { lesson = "string", examples = "array", exercises = "array" }
-
-[task.code_synthesis]
-description = "Let the agent attempt to write working code"
-flow = ["coder"]
-input_schema = { problem = "string" }
-output_schema = { solution = "string", logs = "array" }
-
 # ----------------------------
 # [deployment.<name>]
 # Hosting configuration
 # ----------------------------
 [deployment.default]
 runtime = "fastapi"
-expose = ["task.teaching"]
+expose = ["task.qa"]
 port = 8080
 
 # ----------------------------
@@ -141,4 +91,4 @@ port = 8080
 # Secrets and environment substitutions
 # ----------------------------
 [vars]
-OPENAI_API_KEY = "API_KEY"
+OPENAI_API_KEY = "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"

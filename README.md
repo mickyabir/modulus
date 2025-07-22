@@ -174,10 +174,10 @@ You can keep your logic, prompts, and configuration all in a clean, modular stru
 - [x] FastAPI-based deployments
 - [x] Custom tool loading with type and description extraction
 - [ ] Vector memory support
+- [ ] Tool integration into agent workflow
+- [ ] UI (web and CLI) for user input 
 - [ ] Streaming message support
-- [ ] CLI diff and apply workflow
 - [ ] Remote deployments and environments
-- [ ] Web UI for visualization
 
 ## License
 

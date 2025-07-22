@@ -47,7 +47,7 @@ class TomlParser():
         provider_type: str = _get_required_opt_typed("provider", name, "type", block, str)
 
         api_key = block.get("api_key", None)
-        known_keys = {"provider", "model", "temperature", "max_tokens"}
+        known_keys = {"type", "api_key"}
         params = {k: v for k, v in block.items() if k not in known_keys}
 
         return ProviderConfig(
@@ -84,7 +84,7 @@ class TomlParser():
         """
         provider: str = _get_required_opt_typed("embedding", name, "provider", block, str)
         model: str = _get_required_opt_typed("embedding", name, "model", block, str)
-        known_keys = {"provider", "model", "temperature", "max_tokens"}
+        known_keys = {"provider", "model"}
         params = {k: v for k, v in block.items() if k not in known_keys}
 
         return EmbeddingConfig(
@@ -102,7 +102,7 @@ class TomlParser():
         persist = block.get("persist", False)
         namespace = block.get("namespace")
         embedding = block.get("embedding")
-        known_keys = {"provider", "model", "temperature", "max_tokens"}
+        known_keys = {"type", "persist", "namespace", "embedding"}
         params = {k: v for k, v in block.items() if k not in known_keys}
 
         return MemoryConfig(
@@ -122,7 +122,7 @@ class TomlParser():
         flow: list[str] = _get_required_opt_typed("task", name, "flow", block, list)
         input_schema: Dict[str, str] = _get_required_opt_typed("task", name, "input_schema", block, dict)
         output_schema: Dict[str, str] = _get_required_opt_typed("task", name, "output_schema", block, dict)
-        known_keys = {"description", "entry_agent", "input_schema", "output_schema"}
+        known_keys = {"description", "flow", "input_schema", "output_schema"}
         params = {k: v for k, v in block.items() if k not in known_keys}
 
         return TaskConfig(
@@ -157,7 +157,7 @@ class TomlParser():
         tools: list[str] = _get_required_opt_typed("agent", name, "tools", block, list)
         memory: str = block.get("memory")
 
-        known_keys = {"role", "goal", "llm", "tools", "memory"}
+        known_keys = {"prompt", "llm", "tools", "memory"}
         params = {k: v for k, v in block.items() if k not in known_keys}
 
         return AgentConfig(

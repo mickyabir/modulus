@@ -1,7 +1,6 @@
 import os
 
-example_config = """
-# ============================
+example_config = """# ============================
 # Modulus TOML Schema v0.1
 # ============================
 
@@ -11,7 +10,7 @@ example_config = """
 # ----------------------------
 [provider.openai]
 type = "openai"
-api_key = "@var:OPENAI_API_KEY"
+api_key = "@var:OPENAI_API_KEY" # use @env:OPENAI_API_KEY if it is defined as an environment variable
 
 # ----------------------------
 # [llm.<name>]
@@ -27,7 +26,6 @@ max_tokens = 2048
 provider = "openai"
 model = "gpt-3.5-turbo"
 temperature = 0.0
-
 
 # ----------------------------
 # [embedding.<name>]
@@ -47,7 +45,6 @@ persist = true
 namespace = "main"
 embedding_model = "text-embedding-ada-002"
 
-
 # ----------------------------
 # [[tool]]
 # External API, function, or memory lookup
@@ -61,46 +58,16 @@ function = "functions/foo.foofn"
 # Defines an AI persona
 # ----------------------------
 [agent.researcher]
-role = "Information seeker"
-goal = "Find and summarize relevant data"
 prompt = "@file:prompts/researcher.prompt"
 llm = "default"
 tools = []
 memory = "vectorstore"
 
 [agent.analyst]
-role = "Data interpreter"
-goal = "Analyze results and provide final output"
 prompt = "@file:prompts/analyst.prompt"
 llm = "fast"
 tools = []
 memory = "vectorstore"
-
-[agent.teacher]
-role = "Information seeker"
-goal = "Find and summarize relevant data"
-prompt = "@file:prompts/teacher.prompt"
-llm = "default"
-tools = []
-memory = "vectorstore"
-
-[agent.simplifier]
-role = "Simplifier"
-goal = "Simplify results"
-prompt = "@file:prompts/simplifier.prompt"
-tools = ["foo"]
-memory = "vectorstore"
-llm = "fast"
-
-[agent.coder]
-role = "Python programmer"
-goal = "Write working code to solve the given task"
-prompt = "You are a coding agent."
-llm = "default"
-tools = []
-memory = "vectorstore"
-behavior = "loop"
-loop_control = { max_steps = 10, stop_condition = "output.contains('SUCCESS')" }
 
 # ----------------------------
 # [task.<name>]
@@ -112,31 +79,13 @@ flow = ["researcher", "analyst"]
 input_schema = { question = "string" }
 output_schema = { answer = "string", citations = "array" }
 
-[task.qa_simplified]
-description = "Full question answering pipeline"
-flow = ["researcher", "analyst", "simplifier"]
-input_schema = { question = "string" }
-output_schema = { answer = "string"}
-
-[task.teaching]
-description = "Full question answering pipeline"
-flow = ["teacher"]
-input_schema = { question = "string" }
-output_schema = { lesson = "string", examples = "array", exercises = "array" }
-
-[task.code_synthesis]
-description = "Let the agent attempt to write working code"
-flow = ["coder"]
-input_schema = { problem = "string" }
-output_schema = { solution = "string", logs = "array" }
-
 # ----------------------------
 # [deployment.<name>]
 # Hosting configuration
 # ----------------------------
 [deployment.default]
 runtime = "fastapi"
-expose = ["task.teaching"]
+expose = ["task.qa"]
 port = 8080
 
 # ----------------------------
@@ -147,6 +96,29 @@ port = 8080
 OPENAI_API_KEY = "API_KEY"
 """
 
+example_function = """from modulus.core.resources.tool import function
+
+
+@function("Returns true if x is even")
+def foofn(x: int):
+    return x % 2
+"""
+
+example_prompt_researcher = """You are a PhD level researcher.
+
+You should be clear, concise, and professional in your responses.
+
+Do not make information up, always give your evidence for claims, and make everything coherent.
+"""
+
+example_prompt_analyst = """You are a PhD level analyst.
+
+Analyze the results and claims you are given, and provide your expert opinions based on facts and logic about what you have received.
+
+Be clear and concise, and do not make anything up or hallucinate.
+
+Use your best judgement and provide clear thoughts.
+"""
 
 def init(directory: str):
     if not os.path.exists(directory):
@@ -159,3 +131,21 @@ def init(directory: str):
     else:
         with open(config_filepath, "w") as f:
             f.write(example_config)
+
+    if not os.path.isdir("functions"):
+        os.mkdir("functions")
+
+    if not os.path.isdir("prompts"):
+        os.mkdir("prompts")
+
+    if not os.path.isfile("functions/foo.py"):
+        with open("functions/foo.py", "w") as f:
+            f.write(example_function)
+
+    if not os.path.isfile("prompts/analyst.prompt"):
+        with open("prompts/analyst.prompt", "w") as f:
+            f.write(example_prompt_analyst)
+
+    if not os.path.isfile("prompts/researcher.prompt"):
+        with open("prompts/researcher.prompt", "w") as f:
+            f.write(example_prompt_researcher)

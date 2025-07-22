@@ -1,5 +1,6 @@
 import os
 import importlib
+import importlib.util
 import inspect
 
 from typing import Callable
@@ -28,17 +29,36 @@ def load_prompt(value: str) -> str:
     return value
 
 
-def load_function(path: str):
+def load_function(function_path: str):
     """
-    Given a string like 'functions/foo.foofn', load and return the function object.
-    Converts slashes to dots for module import.
-    """
-    # Replace slashes with dots to get module path + function name
-    path = path.replace('/', '.')
+    Load a function given a path like 'functions/foo.foofn' relative to current working directory,
+    without requiring the directory to be in sys.path or a package.
 
-    module_name, fn_name = path.rsplit('.', 1)
-    module = importlib.import_module(module_name)
-    fn = getattr(module, fn_name)
+    - Splits to get module file path and function name.
+    - Loads module from file.
+    - Returns the function object.
+    """
+    # Separate the module path and function name
+    module_path_str, fn_name = function_path.rsplit('.', 1)
+    # Convert dots or slashes to filesystem path
+    module_path_parts = module_path_str.replace('.', '/').split('/')
+    # Build the .py file path relative to current working directory
+    module_file_path = os.path.join(*module_path_parts) + ".py"
+
+    if not os.path.isfile(module_file_path):
+        raise FileNotFoundError(f"Module file not found at: {module_file_path}")
+
+    # Create a unique module name for importlib
+    module_name = "_modulus_dynamic_module"
+
+    spec = importlib.util.spec_from_file_location(module_name, module_file_path)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)  # Load the module
+
+    fn = getattr(module, fn_name, None)
+    if fn is None:
+        raise AttributeError(f"Function '{fn_name}' not found in module '{module_file_path}'")
+
     return fn
 
 
