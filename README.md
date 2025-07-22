@@ -30,53 +30,17 @@ You can also use `pip` if you don't use `uv`.
 
 ## Quickstart
 
-1. Create a `modulus.toml` file:
-
-```toml
-[vars]
-[vars.values]
-OPENAI_API_KEY = "@env:OPENAI_API_KEY"
-
-[llm.default]
-provider = "openai"
-model = "gpt-4o"
-api_key = "@var:OPENAI_API_KEY"
-temperature = 0.7
-max_tokens = 1024
-
-[agent.qa]
-llm = "default"
-name = "qa"
-prompt = "@file:prompts/qa.txt"
-
-[task.qa_task]
-flow = ["qa"]
-input_schema = "string"
-output_schema = "string"
-
-[deployment.default]
-runtime = "fastapi"
-port = 8000
-expose = ["task.qa_task"]
-```
-
-2. Create a prompt file:
+1. `modulus init` to initialize the working directory. This will create a `modulus.toml` config file, a prompts folder, and a functions folder.
+2. Modify the `modulus.toml` file to either add an OpenAI API key, or change the config to pull the API key from the environment.
+3. `modulus run` to deploy your configuration  This will start a FastAPI server at `http://localhost:8000` with the QA task available as an endpoint.
+4. Run a curl command to test out the flow: 
 
 ```
-prompts/qa.txt
+curl -X POST http://0.0.0.0:8080/qa \
+     -H "Content-Type: application/json" \
+     -d '{"question": "Teach me something cool about string theory"}'
 ```
 
-```txt
-Answer the user's question clearly and concisely.
-```
-
-3. Run the deployment:
-
-```bash
-modulus run
-```
-
-This will start a FastAPI server at `http://localhost:8000` with the QA task available as an endpoint.
 
 ## Core Concepts
 
@@ -124,7 +88,7 @@ def greet(name: str) -> str:
 
 Modulus will introspect the function and make it callable as part of your flow.
 
-## Memory
+## Memory (Coming Soon)
 
 Modulus supports vector memory backends. You can define memory blocks that store and retrieve context using embeddings.
 
