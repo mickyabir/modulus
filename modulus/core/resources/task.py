@@ -2,18 +2,23 @@ import json
 
 from modulus.core.resources.agent import Agent
 
+
 class Task:
-    def __init__(self, name: str, flow: list[Agent], input_schema: dict, output_schema: dict):
+    def __init__(self, name: str, flow: list[Agent], input_schema: dict, output_schema: dict,
+                 output_intermediate: bool):
         self.name = name
         self.flow = flow
         self.input_schema = input_schema
         self.output_schema = output_schema
+        self.output_intermediate = output_intermediate
+
     def start(self, input_text: str) -> str:
         current_text = input_text
         num_agents = len(self.flow)
 
+        return_text = ""
+
         for i, agent in enumerate(self.flow):
-            print(f"Task flow handed off to {agent.name}")
             if i == 0:
                 current_text = agent.message(input_text)
 
@@ -39,5 +44,14 @@ class Task:
                     "original_input": input_text
                 }
                 current_text = agent.message(json.dumps(full_text))
+
+            if self.output_intermediate:
+                return_text += f"AGENT: {agent.name}\n"
+                return_text += f"MODEL: {agent.llm.get_model()}\n\n"
+                return_text += current_text
+                return_text += "\n\n"
+
+        if self.output_intermediate:
+            return return_text
 
         return current_text

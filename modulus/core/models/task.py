@@ -9,4 +9,5 @@ class TaskConfig:
     flow: list[str]
     input_schema: Dict[str, str]
     output_schema: Dict[str, str]
+    output_intermediate: bool = False
     params: Dict[str, Any] = field(default_factory=dict)

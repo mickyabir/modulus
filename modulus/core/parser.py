@@ -122,6 +122,7 @@ class TomlParser():
         flow: list[str] = _get_required_opt_typed("task", name, "flow", block, list)
         input_schema: Dict[str, str] = _get_required_opt_typed("task", name, "input_schema", block, dict)
         output_schema: Dict[str, str] = _get_required_opt_typed("task", name, "output_schema", block, dict)
+        output_intermediate: bool = block.get("output_intermediate", False)
         known_keys = {"description", "flow", "input_schema", "output_schema"}
         params = {k: v for k, v in block.items() if k not in known_keys}
 
@@ -131,6 +132,7 @@ class TomlParser():
             flow=flow,
             input_schema=input_schema,
             output_schema=output_schema,
+            output_intermediate=output_intermediate,
             params=params
         )
 

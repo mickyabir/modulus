@@ -6,9 +6,9 @@ import inspect
 from typing import Callable
 
 from modulus.core.parser import TomlParser
-from modulus.core.resources.provider import OpenAIProvider
+from modulus.core.resources.provider import OpenAIProvider, AnthropicProvider
 from modulus.core.resources.agent import Agent
-from modulus.core.resources.llm import OpenAILLM
+from modulus.core.resources.llm import OpenAILLM, AnthropicLLM
 from modulus.core.resources.task import Task
 from modulus.core.resources.tool import Function
 from modulus.core.resources.deployment import Deployment
@@ -78,18 +78,19 @@ def run():
     for provider_name in config_data.get('provider'):
         provider = config_data.get('provider').get(provider_name)
 
-        if provider.type == 'openai':
-            api_key = provider.api_key
-            if provider.api_key and provider.api_key.startswith("@var:"):
-                api_key_name = provider.api_key[len("@var:"):]
-                api_key = config_data.get('vars').get('vars').values.get(api_key_name, None)
-            elif provider.api_key and provider.api_key.startswith("@env:"):
-                api_key = os.environ.get(provider.api_key[len('@env:')], None)
+        api_key = provider.api_key
+        if provider.api_key and provider.api_key.startswith("@var:"):
+            api_key_name = provider.api_key[len("@var:"):]
+            api_key = config_data.get('vars').get('vars').values.get(api_key_name, None)
+        elif provider.api_key and provider.api_key.startswith("@env:"):
+            api_key = os.environ.get(provider.api_key[len('@env:')], None)
 
+        if provider.type == 'openai':
             providers[provider_name] = OpenAIProvider(api_key, provider.params)
+        elif provider.type == 'anthropic':
+            providers[provider_name] = AnthropicProvider(api_key, provider.params)
         else:
             raise NotImplementedError(f"Provider type {provider.type} is currently not supported")
-
 
     llms = {}
     for llm_name in config_data.get('llm'):
@@ -100,7 +101,13 @@ def run():
         main_params = {
             'temperature': llm.temperature, 'max_tokens': llm.max_tokens
         }
-        llms[llm_name] = OpenAILLM(provider, llm.model, main_params | llm.params)
+
+        if type(provider) == OpenAIProvider:
+            llms[llm_name] = OpenAILLM(provider, llm.model, main_params | llm.params)
+        elif type(provider) == AnthropicProvider:
+            llms[llm_name] = AnthropicLLM(provider, llm.model, main_params | llm.params)
+        else:
+            raise NotImplementedError(f"LLM {llm_name} requires provider that is not implemented")
 
     embeddings = {}
     for embedding_name in config_data.get('embedding'):
@@ -147,7 +154,8 @@ def run():
 
         flow = [agents[agent_name] for agent_name in task_agents_names]
 
-        tasks[task_name] = Task(task_name, flow, task_config.input_schema, task_config.output_schema)
+        tasks[task_name] = Task(task_name, flow, task_config.input_schema, task_config.output_schema,
+                                task_config.output_intermediate)
 
     deployments = {}
     for deployment_name in config_data.get('deployment'):
@@ -170,7 +178,3 @@ def run():
             time.sleep(1)
     except KeyboardInterrupt:
         print("Shutting down...")
-
-    # print(tasks['qa_simplified'].start("Teach me about topological qubits"))
-    # print(tools['foo'].run({}))
-    # print(get_function_signature(tools['foo'].fn))

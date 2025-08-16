@@ -10,11 +10,14 @@ class OpenAILLM(LLM):
         self.provider = provider
         self.params = params
 
+    def get_model(self):
+        return self.model
+
     def query(self, prompt: str) -> str:
         response = self.provider.get_client().responses.create(
             input=prompt,
             model=self.model,
-            temperature=self.params.get('temperature', NOT_GIVEN),
+            # temperature=self.params.get('temperature', NOT_GIVEN),
             max_output_tokens=self.params.get('max_tokens', NOT_GIVEN),
             top_p=self.params.get('top_p', NOT_GIVEN),
         )

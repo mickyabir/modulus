@@ -10,7 +10,7 @@ example_config = """# ============================
 # ----------------------------
 [provider.openai]
 type = "openai"
-api_key = "@var:OPENAI_API_KEY" # use @env:OPENAI_API_KEY if it is defined as an environment variable
+api_key = "@env:OPENAI_API_KEY" # use @var:OPENAI_API_KEY if it is defined as a variable below
 
 # ----------------------------
 # [llm.<name>]
@@ -93,7 +93,7 @@ port = 8080
 # Secrets and environment substitutions
 # ----------------------------
 [vars]
-OPENAI_API_KEY = "API_KEY"
+API_KEY = "API_KEY"
 """
 
 example_function = """from modulus.core.resources.tool import function

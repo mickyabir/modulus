@@ -8,22 +8,26 @@
 # ----------------------------
 [provider.openai]
 type = "openai"
-api_key = "@var:OPENAI_API_KEY" # use @env:OPENAI_API_KEY if it is defined as an environment variable
+api_key = "@env:OPENAI_API_KEY"
+
+[provider.anthropic]
+type = "anthropic"
+api_key = "@env:ANTHROPIC_API_KEY"
 
 # ----------------------------
 # [llm.<name>]
 # Defines a language model
 # ----------------------------
-[llm.default]
-provider = "openai"
-model = "gpt-4o"
-temperature = 0.7
-max_tokens = 2048
+[llm.claude-opus-4-1]
+provider = "anthropic"
+model = "claude-opus-4-1"
+temperature = 0.2
+max_tokens = 256
 
-[llm.fast]
+[llm.gpt-5]
 provider = "openai"
-model = "gpt-3.5-turbo"
-temperature = 0.0
+model = "gpt-5-chat-latest"
+max_tokens = 512
 
 # ----------------------------
 # [embedding.<name>]
@@ -55,27 +59,28 @@ function = "functions/foo.foofn"
 # [[agent]]
 # Defines an AI persona
 # ----------------------------
-[agent.researcher]
-prompt = "@file:prompts/researcher.prompt"
-llm = "default"
-tools = []
+[agent.creator]
+prompt = "@file:prompts/creator.prompt"
+tools = ["foo"]
 memory = "vectorstore"
+llm = "claude-opus-4-1"
 
-[agent.analyst]
-prompt = "@file:prompts/analyst.prompt"
-llm = "fast"
-tools = []
+[agent.analyzer]
+prompt = "@file:prompts/analyzer.prompt"
+tools = ["foo"]
 memory = "vectorstore"
+llm = "gpt-5"
 
 # ----------------------------
 # [task.<name>]
 # Pipeline or multi-agent orchestration
 # ----------------------------
-[task.qa]
-description = "Full question answering pipeline"
-flow = ["researcher", "analyst"]
+[task.analysis]
+description = "Can one LLM deceive another?"
+flow = ["creator", "analyzer"]
 input_schema = { question = "string" }
-output_schema = { answer = "string", citations = "array" }
+output_schema = { answer = "string" }
+output_intermediate = true
 
 # ----------------------------
 # [deployment.<name>]
@@ -83,7 +88,7 @@ output_schema = { answer = "string", citations = "array" }
 # ----------------------------
 [deployment.default]
 runtime = "fastapi"
-expose = ["task.qa"]
+expose = ["task.analysis"]
 port = 8080
 
 # ----------------------------
@@ -91,4 +96,3 @@ port = 8080
 # Secrets and environment substitutions
 # ----------------------------
 [vars]
-OPENAI_API_KEY = "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"
